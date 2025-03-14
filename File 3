@@ -1,0 +1,296 @@
+Basic Arithmetic Operations in Assembly (x86 NASM)
+This **NASM x86 Assembly program** performs **addition, subtraction, multiplication, and division** on two predefined numbers.
+
+---
+
+### **Step I: Assembly Program (arithmetic.asm)**
+```assembly
+section .data
+    num1 dd 10            ; First number
+    num2 dd 5             ; Second number
+    add_msg db "Addition: ", 0
+    sub_msg db "Subtraction: ", 0
+    mul_msg db "Multiplication: ", 0
+    div_msg db "Division: ", 0
+    newline db 0xA        ; Newline character
+
+section .bss
+    result resb 10        ; Buffer for storing result
+
+section .text
+    global _start
+
+_start:
+    ; ---------------- Perform Addition ----------------
+    mov eax, [num1]
+    add eax, [num2]
+    mov ebx, add_msg
+    call print_result
+
+    ; ---------------- Perform Subtraction ----------------
+    mov eax, [num1]
+    sub eax, [num2]
+    mov ebx, sub_msg
+    call print_result
+
+    ; ---------------- Perform Multiplication ----------------
+    mov eax, [num1]
+    imul eax, [num2]
+    mov ebx, mul_msg
+    call print_result
+
+    ; ---------------- Perform Division ----------------
+    mov eax, [num1]
+    xor edx, edx          ; Clear edx for division
+    mov ebx, [num2]
+    div ebx
+    mov ebx, div_msg
+    call print_result
+
+    ; Exit program
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
+
+; ---------------- Function to Print Result ----------------
+print_result:
+    push eax
+    push ebx
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, ebx          ; Message
+    mov edx, 15
+    int 0x80
+
+    pop eax
+    call int_to_str
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, result
+    mov edx, 10
+    int 0x80
+
+    ; Print newline
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+    pop ebx
+    ret
+
+; ---------------- Function to Convert Integer to String ----------------
+int_to_str:
+    mov edi, result + 9
+    mov byte [edi], 0
+    dec edi
+
+convert_loop:
+    mov ecx, 10
+    div ecx
+    add dl, '0'
+    mov [edi], dl
+    dec edi
+    test eax, eax
+    jnz convert_loop
+    inc edi
+    ret
+```
+
+---
+
+### **Step II: Compilation and Execution**
+#### **1. Assemble the Program**
+```sh
+nasm -f elf32 arithmetic.asm -o arithmetic.o
+```
+#### **2. Link the Object File**
+```sh
+ld -m elf_i386 arithmetic.o -o arithmetic
+```
+#### **3. Run the Executable**
+```sh
+./arithmetic
+```
+
+---
+
+### **Expected Output**
+```
+Addition: 15
+Subtraction: 5
+Multiplication: 50
+Division: 2
+```
+
+
+
+## **Basic Arithmetic Operations in Assembly (x86 NASM)**
+This assembly program will:  
+1. **Take two user inputs** (numbers).  
+2. **Perform addition, subtraction, multiplication, and division**.  
+3. **Print the results**.  
+
+---
+
+### **Step I: Assembly Program (arithmetic.asm)**
+```assembly
+section .data
+    msg1 db "Enter first number: ", 0
+    msg2 db "Enter second number: ", 0
+    add_msg db "Addition: ", 0
+    sub_msg db "Subtraction: ", 0
+    mul_msg db "Multiplication: ", 0
+    div_msg db "Division: ", 0
+    newline db 0xA
+
+section .bss
+    num1 resb 10
+    num2 resb 10
+    result resb 10
+
+section .text
+    global _start
+
+_start:
+    ; ---------------- Get First Number ----------------
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg1
+    mov edx, 20
+    int 0x80              ; Print "Enter first number: "
+
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, num1
+    mov edx, 10
+    int 0x80              ; Read user input
+
+    call str_to_int
+    mov dword [num1], eax ; Store in num1
+
+    ; ---------------- Get Second Number ----------------
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg2
+    mov edx, 20
+    int 0x80              ; Print "Enter second number: "
+
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, num2
+    mov edx, 10
+    int 0x80              ; Read user input
+
+    call str_to_int
+    mov dword [num2], eax ; Store in num2
+
+    ; ---------------- Perform Addition ----------------
+    mov eax, [num1]
+    add eax, [num2]
+    call print_result
+
+    ; ---------------- Perform Subtraction ----------------
+    mov eax, [num1]
+    sub eax, [num2]
+    call print_result
+
+    ; ---------------- Perform Multiplication ----------------
+    mov eax, [num1]
+    imul eax, [num2]
+    call print_result
+
+    ; ---------------- Perform Division ----------------
+    mov eax, [num1]
+    xor edx, edx
+    mov ebx, [num2]
+    div ebx
+    call print_result
+
+    ; Exit program
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
+
+; ---------------- Function to Print Result ----------------
+print_result:
+    push eax
+    call int_to_str
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, result
+    mov edx, 10
+    int 0x80
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+    pop eax
+    ret
+
+; ---------------- Function to Convert String to Integer ----------------
+str_to_int:
+    mov esi, num1
+    xor eax, eax
+    xor ecx, ecx
+
+convert_digit:
+    movzx edx, byte [esi]
+    cmp edx, 10
+    je done_convert
+    sub edx, '0'
+    imul eax, eax, 10
+    add eax, edx
+    inc esi
+    jmp convert_digit
+
+done_convert:
+    ret
+
+; ---------------- Function to Convert Integer to String ----------------
+int_to_str:
+    mov edi, result + 9
+    mov byte [edi], 0
+    dec edi
+
+convert_loop:
+    mov ecx, 10
+    div ecx
+    add dl, '0'
+    mov [edi], dl
+    dec edi
+    test eax, eax
+    jnz convert_loop
+    inc edi
+    ret
+```
+
+---
+
+### **Step II: Compilation and Execution**
+#### **1. Assemble the Program**
+```sh
+nasm -f elf32 arithmetic.asm -o arithmetic.o
+```
+#### **2. Link the Object File**
+```sh
+ld -m elf_i386 arithmetic.o -o arithmetic
+```
+#### **3. Run the Executable**
+```sh
+./arithmetic
+```
+
+---
+
+### **Expected Output**
+```
+Enter first number: 10
+Enter second number: 5
+Addition: 15
+Subtraction: 5
+Multiplication: 50
+Division: 2
+```
