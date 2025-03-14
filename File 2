@@ -1,0 +1,93 @@
+Modified Hello World Program with Different Memory Segments
+
+
+---
+
+### **Step I: Assembly Program (hello_segments.asm)**  
+```assembly
+section .data
+    msg_data db "Hello from .data!", 0xA  ; Initialized string in .data
+    len_data equ $ - msg_data             ; Length of the string
+
+section .bss
+    msg_bss resb 20   ; Reserve space for a message in .bss
+
+section .text
+    global _start
+
+_start:
+    ; Store message in .bss (copy from .data)
+    mov esi, msg_data
+    mov edi, msg_bss
+    mov ecx, len_data
+    rep movsb  ; Copy message from .data to .bss
+
+    ; Print message from .data
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_data
+    mov edx, len_data
+    int 0x80
+
+    ; Print message from .bss (copied data)
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, msg_bss
+    mov edx, len_data
+    int 0x80
+
+    ; Print message directly from .text section
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, hello_text
+    mov edx, hello_text_len
+    int 0x80
+
+    ; Exit program
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
+
+section .text
+hello_text db "Hello from .text!", 0xA  ; Message stored in .text section
+hello_text_len equ $ - hello_text       ; Length of message
+```
+
+---
+
+### **Step II: Explanation of Memory Segments**  
+
+1. **`.data` (Initialized Data Segment)**  
+   - Stores **predefined values** and constants.  
+   - Example: `msg_data db "Hello from .data!"`  
+
+2. **`.bss` (Uninitialized Data Segment)**  
+   - Reserves **space for variables** that will be initialized later.  
+   - Example: `msg_bss resb 20` (reserved space for a string).  
+
+3. **`.text` (Code Segment)**  
+   - Stores **executable instructions** and static strings.  
+   - Example: `hello_text db "Hello from .text!"`.  
+---
+
+Step III: Compilation and Execution
+1. Assemble the Program
+sh_____
+nasm -f elf32 hello_segments.asm -o hello_segments.o
+
+2. Link the Object File
+sh_____
+ld -m elf_i386 hello_segments.o -o hello_segments
+
+3. Run the Executable
+sh____
+./hello_segments
+
+
+
+
+Expected Output_____
+
+Hello from .data!
+Hello from .data!
+Hello from .text!
